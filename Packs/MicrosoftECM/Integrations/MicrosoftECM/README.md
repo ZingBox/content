@@ -3,7 +3,12 @@
 The configuration manager provides the overall Configuration Management (CM) infrastructure and environment to the product development team
 This integration was integrated and tested with version 1906 of Microsoft Endpoint Configuration Manager
 ## Prerequisites
-
+- This integration requires root access in order to execute commands. 
+If you've configured the server to run Docker images with a non-root internal user make sure to exclude the `demisto/powershell-ubuntu` Docker image as documented [here](https://docs.paloaltonetworks.com/cortex/cortex-xsoar/5-5/cortex-xsoar-admin/docker/docker-hardening-guide/run-docker-with-non-root-internal-users.html)
+- Installation and configuration for Windows Remote Management to support PowerShell session is a prerequisite step to support this integration - for more information, please refer to the following Microsoft [Article](https://docs.microsoft.com/en-us/windows/win32/winrm/installation-and-configuration-for-windows-remote-management)
+- PowerShell Remote sessions are created over port 5985(Microsoft Web service management/WinRm). This port needs to be opened from XSOAR to the hosts on the local and Network firewalls. 
+- Authentication is NTLM based. 
+- The integration requires a valid domain user with the permission set to perform the wanted remote tasks.
 ## Configure Microsoft Endpoint Configuration Manager on Cortex XSOAR
 
 1. Navigate to **Settings** > **Integrations** > **Servers & Services**.
