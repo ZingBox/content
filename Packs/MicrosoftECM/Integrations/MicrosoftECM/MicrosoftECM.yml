@@ -838,7 +838,7 @@ script:
       description: The unique identifier of the invocation
       type: string
     description: Gets a script invocation results
-  dockerimage: devdemisto/pwsh-remoting:1.0.0.11993
+  dockerimage: demisto/powershell-ubuntu:7.0.3.12001
   runonce: false
 fromversion: 5.5.0
 

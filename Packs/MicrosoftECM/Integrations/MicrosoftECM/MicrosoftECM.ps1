@@ -1,6 +1,5 @@
 . $PSScriptRoot\CommonServerPowerShell.ps1
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', Scope='Function', Target='*')]
 
 $COLLECTION_TYPE_MAPPING = @{
 	"0" = "Root"
@@ -79,8 +78,13 @@ Specifies a collection name
 .OUTPUTS
 Return the used parameter or throws an exception if more then one is used
 #>
-Function ValidateGetCollectionListParams($collection_id, $collection_name)
+Function ValidateGetCollectionListParams()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$collection_id,
+		[Parameter()] [string]$collection_name
+	)
 	AssertNoMoreThenExpectedParametersGiven "Please select only one of: collection_id, collection_name." 1 $collection_id $collection_name
 	$result = ""
 	if ($collection_id)
@@ -113,8 +117,15 @@ Specifies the resource ID of a device
 .OUTPUTS
 Return the used parameters or throws an exception if parameter set cannot be resolved
 #>
-Function ValidateGetDeviceListParams($CollectionID, $CollectionName, $DeviceName, $resourceID)
+Function ValidateGetDeviceListParams()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$DeviceName,
+		[Parameter()] [string]$resourceID
+	)
 	if ($DeviceName)
 	{
 		AssertNoMoreThenExpectedParametersGiven "device_name parameter can be resolved only with collection_name or collection_id" 0 $resourceID
@@ -160,8 +171,13 @@ Specifies the script code string content
 .OUTPUTS
 Return the used parameters or throws an exception if parameter set cannot be resolved
 #>
-Function ValidateCreateScriptParams($script_file_entry_id, $script_text)
+Function ValidateCreateScriptParams()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$script_file_entry_id,
+		[Parameter()] [string]$script_text
+	)
 	AssertNoMoreThenExpectedParametersGiven "script_file_entry_id cannot be resolved with script_text" 1 $script_file_entry_id $script_text
 	if (!$script_file_entry_id -And !$script_text)
 	{
@@ -193,8 +209,15 @@ Specifies the collection name to include\exclude in the membership rule
 .OUTPUTS
 Return the used parameters or throws an exception if parameter set cannot be resolved
 #>
-Function ValidateIncludeOrExcludeDeviceCollectionParameters($CollectionID, $CollectionName, $include_collection_id, $include_collection_name)
+Function ValidateIncludeOrExcludeDeviceCollectionParameters()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$include_collection_id,
+		[Parameter()] [string]$include_collection_name
+	)
 	AssertNoMoreThenExpectedParametersGiven "Can only use one of the following parameters: collection_name, collection_id" 1 $CollectionName $CollectionID
 	if (!$CollectionID -And !$CollectionName)
 	{
@@ -262,7 +285,7 @@ Function ParseCollectionObject($Collections)
 			}
 		}
 		$MDOutput = $output."MicrosoftECM.Collections(val.ID && val.ID === obj.ID)" | TableToMarkdown -Name "Collection List"
-		$output."MicrosoftECM.Collections(val.ID && val.ID === obj.ID)" | ForEach-Object {$_.CollectionRules = $_.CollectionRules.Split("`n'")}
+		$output."MicrosoftECM.Collections(val.ID && val.ID === obj.ID)" | ForEach-Object { $_.CollectionRules = $_.CollectionRules.Split("`n'") }
 		ReturnOutputs -ReadableOutput $MDOutput -Outputs $output -RawResponse $_ | Out-Null
 	}
 	else
@@ -270,7 +293,6 @@ Function ParseCollectionObject($Collections)
 		$MDOutput = "### Collection List`nNo results found."
 		ReturnOutputs $MDOutput | Out-Null
 	}
-	
 }
 <#
 .DESCRIPTION
@@ -282,8 +304,13 @@ Specifies collection to parse
 .OUTPUTS
 Return the PSCustomObject with the selected collection keys
 #>
-Function ParseScriptInvocationResults($result, $HumanReadableTitle)
+Function ParseScriptInvocationResults()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$result,
+		[Parameter()] [string]$HumanReadableTitle
+	)
 	if ($result)
 	{
 		$output = [PSCustomObject]@{
@@ -325,7 +352,7 @@ Function ParseScriptObject($script)
 					Comment = $_.Comment
 					LastUpdateTime = ParseDateTimeObjectToIso $_.LastUpdateTime
 					Parameterlist = $_.Parameterlist
-					Script = [System.Text.Encoding]::UTF8.GetString(([System.Convert]::FromBase64String("$( $_.Script )")|?{ $_ }))
+					Script = [System.Text.Encoding]::UTF8.GetString(([System.Convert]::FromBase64String("$( $_.Script )") | Where-Object{ $_ }))
 					ScriptGuid = $_.ScriptGuid
 					ScriptHash = $_.ScriptHash
 					ScriptHashAlgorithm = $_.ScriptHashAlgorithm
@@ -367,8 +394,18 @@ Specifies the name of the script
 .OUTPUTS
 Return the A script invocation object with the invocation results
 #>
-Function ExecuteServiceScript($DeviceName, $CollectionID, $CollectionName, $ScriptText, $ScriptName)
+Function ExecuteServiceScript()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$DeviceName,
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$ScriptText,
+		[Parameter()] [string]$ScriptName
+	)
 	AssertNoMoreThenExpectedParametersGiven "Can only use one of the following parameters: device_name, collection_id, collection_name" 1 $DeviceName $CollectionID $CollectionName
 	if (!$DeviceName -And !$CollectionID -And !$CollectionName)
 	{
@@ -379,7 +416,6 @@ Function ExecuteServiceScript($DeviceName, $CollectionID, $CollectionName, $Scri
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
 		Import-Module .\ConfigurationManager.psd1
 		Set-Location "$( $SiteCode ):"
-		
 		# Checking if script exists in the configuration ConfigurationManager
 		$CMPSSuppressFastNotUsedCheck = $true
 		$Script = Get-CMScript -ScriptName $ScriptName
@@ -426,15 +462,20 @@ Function ExecuteServiceScript($DeviceName, $CollectionID, $CollectionName, $Scri
 	$result
 }
 
-Function GetLastLogOnUser($deviceName)
+Function GetLastLogOnUser()
 {
-	$device = Invoke-Command $global:Session -ArgumentList $deviceName, $global:siteCode -ErrorAction Stop -ScriptBlock {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSReviewUnusedParameter", "")]
+	param(
+		[Parameter()] [string]$DeviceName
+	)
+	$device = Invoke-Command $global:Session -ArgumentList $DeviceName, $global:siteCode -ErrorAction Stop -ScriptBlock {
 		param($deviceName, $siteCode)
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
 		Import-Module .\ConfigurationManager.psd1
 		Set-Location "$( $SiteCode ):"
 		Get-CMResource -ResourceType System -Fast | Where-Object { $_.Name -eq $deviceName }
-		
 	}
 	if ($device)
 	{
@@ -456,8 +497,13 @@ Function GetLastLogOnUser($deviceName)
 	}
 }
 
-Function GetPrimaryUser($deviceName)
+Function GetPrimaryUser()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	param(
+		[Parameter()] [string]$DeviceName
+	)
 	$userDeviceAffinity = Invoke-Command $global:Session -ArgumentList $deviceName, $global:siteCode -ErrorAction Stop -ScriptBlock {
 		param($deviceName, $siteCode)
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
@@ -490,8 +536,15 @@ Function GetPrimaryUser($deviceName)
 	}
 }
 
-Function GetCollectionList($collectionType, $CollectionID, $CollectionName)
+Function GetCollectionList()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	param(
+		[Parameter()] [string]$collectionType,
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName
+	)
 	$usedParameterName = ValidateGetCollectionListParams $CollectionID $CollectionName
 	$parameters = @{
 		usedParameterName = $usedParameterName
@@ -519,8 +572,17 @@ Function GetCollectionList($collectionType, $CollectionID, $CollectionName)
 	}
 	ParseCollectionObject $Collections
 }
-Function GetDeviceList($CollectionID, $CollectionName, $DeviceName, $resourceID)
+Function GetDeviceList()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$DeviceName,
+		[Parameter()] [string]$resourceID
+	)
 	$usedParameterName = ValidateGetDeviceListParams $CollectionID $CollectionName $DeviceName $resourceID
 	$parameters = @{
 		usedParameterName = $usedParameterName
@@ -597,8 +659,15 @@ Function GetDeviceList($CollectionID, $CollectionName, $DeviceName, $resourceID)
 	}
 }
 
-Function GetScriptList($author, $scriptName)
+Function GetScriptList()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$author,
+		[Parameter()] [string]$scriptName
+	)
 	$scripts = Invoke-Command $global:Session -ArgumentList $author, $scriptName, $global:SiteCode -ErrorAction Stop -ScriptBlock {
 		param($author, $scriptName, $SiteCode)
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
@@ -625,8 +694,17 @@ Function GetScriptList($author, $scriptName)
 	ParseScriptObject $scripts
 }
 
-Function CreateScript($scriptFileEntryID, $scriptText, $scriptName)
+Function CreateScript()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseBOMForUnicodeEncodedFile", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$scriptFileEntryID,
+		[Parameter()] [string]$scriptText,
+		[Parameter()] [string]$scriptName
+	)
 	$usedParameterName = ValidateCreateScriptParams $scriptFileEntryID $scriptText
 	$scriptPath = ""
 	if ($scriptFileEntryID)
@@ -653,8 +731,17 @@ Function CreateScript($scriptFileEntryID, $scriptText, $scriptName)
 	ParseScriptObject $script
 }
 
-Function InvokeScript($scriptGuid, $CollectionID, $CollectionName, $DeviceName)
+Function InvokeScript()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$scriptGuid,
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$DeviceName
+	)
 	AssertNoMoreThenExpectedParametersGiven "Can only use one of the following parameters: collection_id, collection_name, device_name" 1 $CollectionID $CollectionName $DeviceName
 	If (!($CollectionID -Or $CollectionName -Or $DeviceName))
 	{
@@ -684,8 +771,15 @@ Function InvokeScript($scriptGuid, $CollectionID, $CollectionName, $DeviceName)
 	ParseScriptInvocationResults $InvokedScript "Script Invocation Result"
 }
 
-Function ApproveScript($scriptGuid, $comment)
+Function ApproveScript()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$scriptGuid,
+		[Parameter()] [string]$comment
+	)
 	Invoke-Command $global:Session -ArgumentList $global:SiteCode, $scriptGuid, $comment -ErrorAction Stop -ScriptBlock {
 		param($SiteCode, $scriptGuid, $comment)
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
@@ -697,8 +791,13 @@ Function ApproveScript($scriptGuid, $comment)
 	$MDOutput = "### Script was approved successfully"
 	ReturnOutputs $MDOutput | Out-Null
 }
-Function InvocationResults($operationID)
+Function InvocationResults()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSReviewUnusedParameter", "")]
+	param(
+		[Parameter()] [string]$operationID
+	)
 	$InvocationResults = Invoke-Command $global:Session -ArgumentList $global:SiteCode, $operationID -ErrorAction Stop -ScriptBlock {
 		param($SiteCode, $operationID)
 		Get-CimInstance -Namespace "root\SMS\site_$SiteCode" -ClassName SMS_ScriptsExecutionStatus  | Where-Object { $_.ClientOperationId -eq $operationID }
@@ -735,8 +834,16 @@ Function InvocationResults($operationID)
 		ReturnOutputs $MDOutput | Out-Null
 	}
 }
-Function CreateDeviceCollection($comment, $CollectionName, $limitingCollectionName)
+Function CreateDeviceCollection()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$comment,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$limitingCollectionName
+	)
 	$collection = Invoke-Command $global:Session -ArgumentList $global:SiteCode, $comment, $CollectionName, $limitingCollectionName -ErrorAction Stop -ScriptBlock {
 		param($SiteCode, $comment, $CollectionName, $limitingCollectionName)
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
@@ -749,8 +856,16 @@ Function CreateDeviceCollection($comment, $CollectionName, $limitingCollectionNa
 }
 
 
-Function AddMembersToDeviceCollection($CollectionID, $CollectionName, $deviceResourceIDs)
+Function AddMembersToDeviceCollection()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$deviceResourceIDs
+	)
 	AssertNoMoreThenExpectedParametersGiven "Can only use one of the following parameters: collection_name, collection_id" 1 $CollectionName $CollectionID
 	if (!$CollectionName -And !$deviceResourceIDs)
 	{
@@ -775,8 +890,16 @@ Function AddMembersToDeviceCollection($CollectionID, $CollectionName, $deviceRes
 	ParseCollectionObject $result
 }
 
-Function IncludeDeviceCollection($CollectionID, $CollectionName, $includeCollectionID, $includeCollectionName)
+Function IncludeDeviceCollection()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$includeCollectionID,
+		[Parameter()] [string]$includeCollectionName
+	)
 	$usedParameterName = ValidateIncludeOrExcludeDeviceCollectionParameters $CollectionID $CollectionName $includeCollectionID $includeCollectionName
 	$parameters = @{
 		usedParameterName = $usedParameterName
@@ -809,8 +932,16 @@ Function IncludeDeviceCollection($CollectionID, $CollectionName, $includeCollect
 	ParseCollectionObject $result
 }
 
-Function ExcludeDeviceCollection($CollectionID, $CollectionName, $excludeCollectionID, $excludeCollectionName)
+Function ExcludeDeviceCollection()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$excludeCollectionID,
+		[Parameter()] [string]$excludeCollectionName
+	)
 	$usedParameterName = ValidateIncludeOrExcludeDeviceCollectionParameters $CollectionID $CollectionName $excludeCollectionID $excludeCollectionName
 	$parameters = @{
 		usedParameterName = $usedParameterName
@@ -843,8 +974,16 @@ Function ExcludeDeviceCollection($CollectionID, $CollectionName, $excludeCollect
 	ParseCollectionObject $result
 }
 
-Function AddMembersToCollectionByQuery($CollectionID, $CollectionName, $queryExpression, $ruleName)
+Function AddMembersToCollectionByQuery()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	param(
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$queryExpression,
+		[Parameter()] [string]$ruleName
+	)
 	if (!$CollectionID -And !$CollectionName)
 	{
 		throw "Must use one of the following parameters: collection_id, collection_name"
@@ -866,24 +1005,45 @@ Function AddMembersToCollectionByQuery($CollectionID, $CollectionName, $queryExp
 	ParseCollectionObject $result
 }
 
-Function StartService($serviceName, $CollectionID, $CollectionName, $DeviceName)
+Function StartService()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$serviceName,
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$DeviceName
+	)
 	$scriptText = "Get-Service $serviceName | Start-Service -PassThru -ErrorAction Stop"
 	$scriptName = "XSOAR StartService"
 	$result = ExecuteServiceScript $DeviceName $CollectionID $CollectionName $scriptText $scriptName
 	ParseScriptInvocationResults $result "StartService script Invocation Result"
 }
 
-Function RestartService($serviceName, $CollectionID, $CollectionName, $DeviceName)
+Function RestartService()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$serviceName,
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$DeviceName
+	)
 	$scriptText = "Get-Service $serviceName | Restart-Service -PassThru -ErrorAction Stop"
 	$scriptName = "XSOAR RestartService"
 	$result = ExecuteServiceScript $DeviceName $CollectionID $CollectionName $scriptText $scriptName
 	ParseScriptInvocationResults $result "RestartService script Invocation Result"
 }
 
-Function StopService($serviceName, $CollectionID, $CollectionName, $DeviceName)
+Function StopService()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	param(
+		[Parameter()] [string]$serviceName,
+		[Parameter()] [string]$CollectionID,
+		[Parameter()] [string]$CollectionName,
+		[Parameter()] [string]$DeviceName
+	)
 	$scriptText = "Get-Service $serviceName | Stop-Service -PassThru -ErrorAction Stop"
 	$scriptName = "XSOAR StopService"
 	$result = ExecuteServiceScript $DeviceName $CollectionID $CollectionName $scriptText $scriptName
@@ -892,12 +1052,15 @@ Function StopService($serviceName, $CollectionID, $CollectionName, $DeviceName)
 
 Function TestModule()
 {
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param()
 	Invoke-Command $global:Session -ArgumentList $global:SiteCode -ErrorAction Stop -ScriptBlock {
 		param($SiteCode)
 		Set-Location $env:SMS_ADMIN_UI_PATH\..\
 		Import-Module .\ConfigurationManager.psd1
 		Set-Location "$( $SiteCode ):"
-		if ((Get-Module -Name ConfigurationManager).Version -eq $null)
+		if ($null -eq (Get-Module -Name ConfigurationManager).Version)
 		{
 			throw "Could not find SCCM modules in the SCCM machine"
 		}
@@ -907,7 +1070,12 @@ Function TestModule()
 
 function Main
 {
-	[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPositionalParameters", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "")]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+	param()
+	#	[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
 	# Parse Params
 	$computerName = $demisto.Params()['ComputerName']
 	$userName = $demisto.Params()['credentials']['identifier']
