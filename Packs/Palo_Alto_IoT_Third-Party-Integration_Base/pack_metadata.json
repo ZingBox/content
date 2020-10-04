@@ -1,0 +1,20 @@
+{
+    "name": "Palo_Alto_IoT_Third-Party-Integration_Base",
+    "description": "test pack ",
+    "support": "community",
+    "currentVersion": "1.0.0",
+    "author": "Dawar",
+    "url": "https://live.paloaltonetworks.com/t5/cortex-xsoar-discussions/bd-p/Cortex_XSOAR_Discussions",
+    "email": "",
+    "created": "2020-10-04T22:26:04Z",
+    "categories": [
+        "Utilities"
+    ],
+    "tags": [
+        "IoT",
+        "PANW"
+    ],
+    "useCases": [],
+    "keywords": [],
+    "githubUser": []
+}
