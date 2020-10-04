@@ -131,9 +131,12 @@ script:
     outputs:
     - contextPath: PaloAltoIoTIntegrationBase.Vulnerabilities
       description: TEST
-  dockerimage: demisto/python3:3.7.3.286
+  dockerimage: demisto/python3:3.8.5.11789
   longRunning: true
   runonce: false
   script: ''
   subtype: python3
   type: python
+fromversion: 5.0.0
+tests:
+- No tests (auto formatted)
