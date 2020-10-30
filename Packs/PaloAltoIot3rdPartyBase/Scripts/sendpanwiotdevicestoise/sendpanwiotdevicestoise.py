@@ -1,5 +1,7 @@
 import demistomock as demisto  # noqa: F401
 from CommonServerPython import *  # noqa: F401
+
+
 attr_lists = demisto.args().get("device_maps")
 return_results("Processing %d devices" % len(attr_lists))
 count = 0

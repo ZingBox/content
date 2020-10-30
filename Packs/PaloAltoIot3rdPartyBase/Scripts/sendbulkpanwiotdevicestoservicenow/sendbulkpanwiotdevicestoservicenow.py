@@ -1,7 +1,5 @@
 import demistomock as demisto  # noqa: F401
 from CommonServerPython import *  # noqa: F401
-
-
 res = []
 count = 0
 offset = 0
@@ -16,6 +14,7 @@ while True:
         "type": "Devices",
         "using": "Palo Alto IoT Third-Party-Integration Base Instance"
     })
+
     if isError(resp[0]):
         # figure out how to get the error message from the previous command to pass along
         demisto.executeCommand("send-status-to-panw-iot-cloud", {
@@ -37,6 +36,7 @@ while True:
             "using": "Palo Alto IoT Third-Party-Integration Base Instance"
         })
         query = query_resp[0]['Contents']['query']
+
         sn_query_resp = demisto.executeCommand("servicenow-query-table", {
             "table_name": "u_zingbox_discovered_devices",
             "limit": 10000,
@@ -53,11 +53,10 @@ while True:
                 "using": "Palo Alto IoT Third-Party-Integration Base Instance"
             })
             upsert_devices_result = upsert_devices_resp[0]["Contents"]
-
             insert_count = upsert_devices_result['insert_count']
             update_count = upsert_devices_result['update_count']
-            update_num += update_count
-            insert_num += insert_count
+            update_num = update_num + update_count
+            insert_num = insert_num + insert_count
 
             if insert_count == 0 and update_count == 0:
                 demisto.executeCommand("send-status-to-panw-iot-cloud", {

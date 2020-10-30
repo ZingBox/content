@@ -18,12 +18,12 @@ tasks:
     skipunavailable: false
     task:
       brand: ""
-      id: 200cd8df-07f3-497f-85da-7efc29c1080e
+      id: 4eb678ce-b363-4819-8487-73b2295a3c25
       iscommand: false
       name: ""
       version: -1
       description: ''
-    taskid: 200cd8df-07f3-497f-85da-7efc29c1080e
+    taskid: 4eb678ce-b363-4819-8487-73b2295a3c25
     timertriggers: []
     type: start
     view: |-
@@ -53,13 +53,13 @@ tasks:
       brand: ""
       description: Returns 'yes' if integration brand is available. Otherwise returns
         'no'
-      id: 55c3b0b4-0b6a-4fd5-8057-93c3e8304d47
+      id: f8213eba-04d9-47da-88cb-a79c1ea1f584
       iscommand: false
       name: IsIntegrationAvailable
       script: IsIntegrationAvailable
       type: condition
       version: -1
-    taskid: 55c3b0b4-0b6a-4fd5-8057-93c3e8304d47
+    taskid: f8213eba-04d9-47da-88cb-a79c1ea1f584
     timertriggers: []
     type: condition
     view: |-
@@ -96,13 +96,13 @@ tasks:
     task:
       brand: Palo Alto IoT Third-Party-Integration Base
       description: sends a status message back to PANW IOT cloud
-      id: 5760ff89-a931-40a2-82b6-445da322f6be
+      id: 3422cb56-4d63-4a57-873c-e207534c58a9
       iscommand: true
       name: send-status-to-panw-iot-cloud
       script: Palo Alto IoT Third-Party-Integration Base|||send-status-to-panw-iot-cloud
       type: regular
       version: -1
-    taskid: 5760ff89-a931-40a2-82b6-445da322f6be
+    taskid: 3422cb56-4d63-4a57-873c-e207534c58a9
     timertriggers: []
     type: regular
     view: |-
@@ -129,13 +129,13 @@ tasks:
       brand: ""
       description: This script gets all available devices from the IoT cloud and updates/creates
         new endpoint with custom attributes on Cisco ISE
-      id: 4835528b-9887-4088-80e0-0847d377497a
+      id: 2e598456-205e-4232-88e8-a3b84c78fa9a
       iscommand: false
       name: send_bulk_panw_iot_devices_to_ise
       script: send_bulk_panw_iot_devices_to_ise
       type: regular
       version: -1
-    taskid: 4835528b-9887-4088-80e0-0847d377497a
+    taskid: 2e598456-205e-4232-88e8-a3b84c78fa9a
     timertriggers: []
     type: regular
     view: |-
@@ -163,13 +163,13 @@ tasks:
     task:
       brand: Builtin
       description: Close the current incident
-      id: 48c8ca06-1ec6-4deb-8402-0e99108b466a
+      id: 7a5a4c57-f093-473e-8148-80bf405c12e1
       iscommand: true
       name: closeInvestigation
       script: Builtin|||closeInvestigation
       type: regular
       version: -1
-    taskid: 48c8ca06-1ec6-4deb-8402-0e99108b466a
+    taskid: 7a5a4c57-f093-473e-8148-80bf405c12e1
     timertriggers: []
     type: regular
     view: |-
