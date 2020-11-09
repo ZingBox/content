@@ -1,6 +1,6 @@
 description: |
   Playbook to be run every 15 minutes via a job. Each run will get incremental updates for devices, and will update or create new endpoints in ise with PANW IOT discovered attributes (ise custom attributes)
-id: 5bc6e9ce-9bcd-4fd5-856f-95fd4c236313
+id: panw_iot_ise_integration
 inputs: []
 name: panw_iot_ise_integration
 outputs: []
@@ -22,6 +22,7 @@ tasks:
       iscommand: false
       name: ""
       version: -1
+      description: ''
     taskid: 9ed08e7d-bf93-46c7-8acc-f49cd8f5c1e4
     timertriggers: []
     type: start
