@@ -1,6 +1,6 @@
 description: |
   This playbook gets all available device inventory and updates/create endpoints with custom attributes on Cisco ISE
-id: panw_iot_ise_bulk_integration
+id: d2394bae-e9ac-40ec-8b19-7459e49a52d6
 inputs: []
 name: panw_iot_ise_bulk_integration
 outputs: []
@@ -18,19 +18,18 @@ tasks:
     skipunavailable: false
     task:
       brand: ""
-      id: 200cd8df-07f3-497f-85da-7efc29c1080e
+      id: 8abdeff6-5bed-46b9-8ab1-b6d5d77426da
       iscommand: false
       name: ""
       version: -1
-      description: ''
-    taskid: 200cd8df-07f3-497f-85da-7efc29c1080e
+    taskid: 8abdeff6-5bed-46b9-8ab1-b6d5d77426da
     timertriggers: []
     type: start
     view: |-
       {
         "position": {
           "x": 450,
-          "y": 50
+          "y": -110
         }
       }
   "1":
@@ -41,32 +40,32 @@ tasks:
       "no":
       - "2"
       "yes":
-      - "3"
+      - "5"
     note: false
     quietmode: 0
     scriptarguments:
       brandname:
-        simple: Cisco ISE
+        simple: Cisco ISE Copy
     separatecontext: false
     skipunavailable: false
     task:
       brand: ""
       description: Returns 'yes' if integration brand is available. Otherwise returns
         'no'
-      id: 55c3b0b4-0b6a-4fd5-8057-93c3e8304d47
+      id: d2f018c0-2662-4262-8e4f-89ea8b13e3f5
       iscommand: false
       name: IsIntegrationAvailable
       script: IsIntegrationAvailable
       type: condition
       version: -1
-    taskid: 55c3b0b4-0b6a-4fd5-8057-93c3e8304d47
+    taskid: d2f018c0-2662-4262-8e4f-89ea8b13e3f5
     timertriggers: []
     type: condition
     view: |-
       {
         "position": {
           "x": 450,
-          "y": 230
+          "y": 10
         }
       }
   "2":
@@ -96,23 +95,24 @@ tasks:
     task:
       brand: Palo Alto IoT Third-Party-Integration Base
       description: sends a status message back to PANW IOT cloud
-      id: 5760ff89-a931-40a2-82b6-445da322f6be
+      id: 31fdc027-a023-4adc-873f-da3312446a0e
       iscommand: true
       name: send-status-to-panw-iot-cloud
       script: Palo Alto IoT Third-Party-Integration Base|||send-status-to-panw-iot-cloud
       type: regular
       version: -1
-    taskid: 5760ff89-a931-40a2-82b6-445da322f6be
+    taskid: 31fdc027-a023-4adc-873f-da3312446a0e
     timertriggers: []
     type: regular
     view: |-
       {
         "position": {
-          "x": 60,
-          "y": 410
+          "x": -20,
+          "y": 430
         }
       }
   "3":
+    continueonerror: true
     id: "3"
     ignoreworker: false
     nexttasks:
@@ -121,28 +121,30 @@ tasks:
     note: false
     quietmode: 0
     scriptarguments:
+      active_ise_instance:
+        simple: ${PaloAltoIoTIntegrationBase.ActiveNodeInstance}
       using:
-        simple: Palo Alto IoT Third-Party-Integration Base Instance,PANW IoT ise Instance
+        simple: Palo Alto IoT Third-Party-Integration Base Instance
     separatecontext: false
     skipunavailable: false
     task:
       brand: ""
       description: This script gets all available devices from the IoT cloud and updates/creates
         new endpoint with custom attributes on Cisco ISE
-      id: 4835528b-9887-4088-80e0-0847d377497a
+      id: aed0f322-1016-49c2-892c-0bf8097be686
       iscommand: false
       name: send_bulk_panw_iot_devices_to_ise
       script: send_bulk_panw_iot_devices_to_ise
       type: regular
       version: -1
-    taskid: 4835528b-9887-4088-80e0-0847d377497a
+    taskid: aed0f322-1016-49c2-892c-0bf8097be686
     timertriggers: []
     type: regular
     view: |-
       {
         "position": {
-          "x": 520,
-          "y": 540
+          "x": 950,
+          "y": 650
         }
       }
   "4":
@@ -163,20 +165,131 @@ tasks:
     task:
       brand: Builtin
       description: Close the current incident
-      id: 48c8ca06-1ec6-4deb-8402-0e99108b466a
+      id: e910d3e4-da2f-4278-8349-35508d2af1ae
       iscommand: true
       name: closeInvestigation
       script: Builtin|||closeInvestigation
       type: regular
       version: -1
-    taskid: 48c8ca06-1ec6-4deb-8402-0e99108b466a
+    taskid: e910d3e4-da2f-4278-8349-35508d2af1ae
     timertriggers: []
     type: regular
     view: |-
       {
         "position": {
-          "x": 430,
-          "y": 810
+          "x": 400,
+          "y": 990
+        }
+      }
+  "5":
+    continueonerror: true
+    id: "5"
+    ignoreworker: false
+    nexttasks:
+      '#none#':
+      - "6"
+    note: false
+    quietmode: 0
+    separatecontext: false
+    skipunavailable: false
+    task:
+      brand: ""
+      description: This Scripts pulls all ISE deployment node details and check if
+        there is any node thats either a standalone OR a primary node and the node
+        matches the instance configured by the user.
+      id: 954aece1-0f28-46cf-876a-87f2e4833d73
+      iscommand: false
+      name: panw_iot_get_active_ise_instance
+      script: f25e9856-47b3-49c6-8d5b-abf33811e17f
+      type: regular
+      version: -1
+    taskid: 954aece1-0f28-46cf-876a-87f2e4833d73
+    timertriggers: []
+    type: regular
+    view: |-
+      {
+        "position": {
+          "x": 720,
+          "y": 260
+        }
+      }
+  "6":
+    id: "6"
+    ignoreworker: false
+    nexttasks:
+      "no":
+      - "3"
+      "yes":
+      - "7"
+    note: false
+    quietmode: 0
+    scriptarguments:
+      entryId:
+        simple: ${lastCompletedTaskEntries}
+    separatecontext: false
+    skipunavailable: false
+    task:
+      brand: ""
+      description: Check whether given entry/entries returned an error. Use ${lastCompletedTaskEntries}
+        to check the previous task entries. If array is provided, will return yes
+        if one of the entries returned an error.
+      id: 43983aa8-2e00-48d5-8302-3fa1cb64209e
+      iscommand: false
+      name: isError
+      script: isError
+      type: condition
+      version: -1
+    taskid: 43983aa8-2e00-48d5-8302-3fa1cb64209e
+    timertriggers: []
+    type: condition
+    view: |-
+      {
+        "position": {
+          "x": 720,
+          "y": 435
+        }
+      }
+  "7":
+    continueonerror: true
+    id: "7"
+    ignoreworker: false
+    nexttasks:
+      '#none#':
+      - "4"
+    note: false
+    quietmode: 0
+    scriptarguments:
+      integration-name:
+        simple: ise
+      message:
+        simple: ${PaloAltoIoTIntegrationBase.NodeErrorStatus}
+      playbook-name:
+        simple: panw_iot_ise_bulk_integration
+      status:
+        simple: error
+      type:
+        simple: device
+      using:
+        simple: Palo Alto IoT Third-Party-Integration Base Instance
+    separatecontext: false
+    skipunavailable: false
+    task:
+      brand: Palo Alto IoT Third-Party-Integration Base
+      description: sends a status message back to PANW IOT cloud
+      id: 4d634fcb-3606-4794-8fc8-d98004f39c3d
+      iscommand: true
+      name: send-status-to-panw-iot-cloud
+      script: Palo Alto IoT Third-Party-Integration Base|||send-status-to-panw-iot-cloud
+      type: regular
+      version: -1
+    taskid: 4d634fcb-3606-4794-8fc8-d98004f39c3d
+    timertriggers: []
+    type: regular
+    view: |-
+      {
+        "position": {
+          "x": 480,
+          "y": 640
         }
       }
 version: -1
@@ -185,10 +298,10 @@ view: |-
     "linkLabelsPosition": {},
     "paper": {
       "dimensions": {
-        "height": 855,
-        "width": 840,
-        "x": 60,
-        "y": 50
+        "height": 1195,
+        "width": 1350,
+        "x": -20,
+        "y": -110
       }
     }
   }
