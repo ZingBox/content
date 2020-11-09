@@ -3,6 +3,9 @@ args:
   isArray: true
   name: device_maps
   required: true
+- description: Active Cisco ISE Instance.
+  name: active_ise_instance
+  required: true
 comment: This script takes in custom attributes from PANW IoT cloud and create or
   updates endpoints in ISE
 commonfields:

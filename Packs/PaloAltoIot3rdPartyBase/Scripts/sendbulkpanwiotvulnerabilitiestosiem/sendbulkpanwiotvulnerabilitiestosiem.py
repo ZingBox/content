@@ -1,7 +1,5 @@
 import demistomock as demisto  # noqa: F401
 from CommonServerPython import *  # noqa: F401
-
-
 vulnerabilities_fields_map = [
     ("ip", "dvc="),
     ("deviceid", "dvcmac="),
@@ -51,8 +49,24 @@ vulnerabilities_fields_map = [
     ("Tags", "cs43Label=Tags cs43=")]
 
 
+'''
+returns a status and message back to cloud
+'''
+
+
+def send_status_to_panw_iot_cloud(status=None, msg=None):
+    demisto.executeCommand("send-status-to-panw-iot-cloud", {
+        "status": status,
+        "message": msg,
+        "integration-name": "siem",
+        "playbook-name": "panw_iot_siem_bulk_integration",
+        "type": "alert",
+        "timestamp": int(round(time.time() * 1000)),
+        "using": "Palo Alto IoT Third-Party-Integration Base Instance"
+    })
+
+
 count = 0
-res = []
 PAGE_SIZE = 1000
 offset = 0
 
@@ -65,18 +79,10 @@ while True:
 
     })
     if isError(resp[0]):
-        # figure out how to get the error message from the previous command to pass along back to cloud
-        demisto.executeCommand("send-status-to-panw-iot-cloud", {
-            "status": "error",
-            "message": "Error, could not get Vulnerabilities from Iot Cloud",
-            "integration-name": "SIEM",
-            "playbook-name": "panw_iot_siem_bulk_integration",
-            "type": "vulnerability",
-            "timestamp": int(round(time.time() * 1000)),
-            "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-        })
-        return_error("Error, could not get Vulnerabilities from Iot Cloud")
-        return_error(resp[0])
+        err_msg = "Error, could not get Vulnerabilities from Iot Cloud %s" % resp[0].get('Contents')
+        send_status_to_panw_iot_cloud("error", err_msg)
+        demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % err_msg)
+        return_error(err_msg)
         break
     size = 0
     risk_level_map = {'Critical': '10', 'High': '6', 'Medium': '3', 'Low': '1'}
@@ -104,35 +110,28 @@ while True:
                 if output_field and val:
                     cef += str(output_field) + str(val) + " "
 
-            demisto.executeCommand("syslog-send", {"message": cef, "using": "PANW IoT Siem Instance"})
-            count += 1
+            res = demisto.executeCommand("syslog-send", {"message": cef, "using": "PANW IoT Siem Instance"})
+            if isError(res[0]):
+                    # We only get an error is configured syslog server address cant be resolved
+                err_msg = "Cant connect to SIEM server %s" % res[0].get('Contents')
+                send_status_to_panw_iot_cloud("error", err_msg)
+                return_error(err_msg)
+            else:
+                count += 1
 
     except Exception as ex:
         demisto.results("Failed to parse vulernability map %s" % str(ex))
 
     if size == PAGE_SIZE:
         offset += PAGE_SIZE
-        demisto.executeCommand("send-status-to-panw-iot-cloud", {
-            "status": "success",
-            "message": "Successfully sent %d Vulnerabilities to SIEM" % count,
-            "integration-name": "SIEM",
-            "playbook-name": "panw_iot_siem_bulk_integration",
-            "type": "vulnerability",
-            "timestamp": int(round(time.time() * 1000)),
-            "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-        })
-        demisto.results("Successfully sent %d vulnerabilities to SIEM" % count)
+        msg = "Successfully sent %d Vulnerabilities to SIEM" % count
+        send_status_to_panw_iot_cloud("success", msg)
+        demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
         time.sleep(3)
     else:
         break
 
-demisto.executeCommand("send-status-to-panw-iot-cloud", {
-    "status": "success",
-    "message": "Successfully sent total %d Vulnerabilities to SIEM" % count,
-    "integration-name": "SIEM",
-    "playbook-name": "panw_iot_siem_bulk_integration",
-    "type": "vulnerability",
-    "timestamp": int(round(time.time() * 1000)),
-    "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-})
-demisto.results("Successfully sent total %d vulnerabilities to SIEM" % count)
+msg = "Successfully sent total %d Vulnerabilities to SIEM" % count
+send_status_to_panw_iot_cloud("success", msg)
+demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
+return_results(msg)

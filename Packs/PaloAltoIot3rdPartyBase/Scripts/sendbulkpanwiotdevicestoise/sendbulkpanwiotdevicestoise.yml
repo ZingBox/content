@@ -1,3 +1,7 @@
+args:
+- description: Active Cisco ISE Instance.
+  name: active_ise_instance
+  required: true
 comment: This script gets all available devices from the IoT cloud and updates/creates
   new endpoint with custom attributes on Cisco ISE
 commonfields:
