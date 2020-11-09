@@ -1,7 +1,6 @@
 import demistomock as demisto  # noqa: F401
 from CommonServerPython import *  # noqa: F401
 
-
 device_fields_map = [
     ("ip_address", "dvc="),
     ("mac_address", "dvcmac="),
@@ -48,13 +47,30 @@ device_fields_map = [
     ("AD_Username", "cs40Label=AD_Username cs40="),
     ("AD_Domain", "cs41Label=AD_Domain cs41="),
     ("Applications", "cs42Label=Applications cs42="),
-    ("Tags", "cs43Label=Tags cs43=")]
+    ("Tags", "cs43Label=Tags cs43="),
+    ("os_combined", "cs44Label=os_combined cs44=")]
+
+'''
+returns a status and message back to cloud
+'''
 
 
-res = []
+def send_status_to_panw_iot_cloud(status=None, msg=None):
+    demisto.executeCommand("send-status-to-panw-iot-cloud", {
+        "status": status,
+        "message": msg,
+        "integration-name": "SIEM",
+        "playbook-name": "panw_iot_siem_bulk_integration",
+        "type": "alert",
+        "timestamp": int(round(time.time() * 1000)),
+        "using": "Palo Alto IoT Third-Party-Integration Base Instance"
+    })
+
+
 count = 0
 offset = 0
 PAGE_SIZE = 1000
+
 while True:
     resp = demisto.executeCommand("get-asset-inventory-with-paging-and-offset", {
         "page_size": PAGE_SIZE,
@@ -64,18 +80,10 @@ while True:
 
     })
     if isError(resp[0]):
-        # figure out how to get the error message from the previous command to pass along
-        demisto.executeCommand("send-status-to-panw-iot-cloud", {
-            "status": "error",
-            "message": "Error, could not get devices from Iot Cloud",
-            "integration-name": "SIEM",
-            "playbook-name": "panw_iot_siem_bulk_integration",
-            "type": "device",
-            "timestamp": int(round(time.time() * 1000)),
-            "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-        })
-        return_error("Error, could not get devices from Iot Cloud")
-        return_error(resp[0])
+        err_msg = "Error, could not get devices from Iot Cloud %s" % resp[0].get('Contents')
+        send_status_to_panw_iot_cloud("error", err_msg)
+        demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % err_msg)
+        return_error(err_msg)
         break
     size = 0
     try:
@@ -93,34 +101,27 @@ while True:
                         val = ""
                     if output_field and val:
                         cef += str(output_field) + str(val) + " "
-                demisto.executeCommand("syslog-send", {"message": cef, "using": "PANW IoT Siem Instance"})
-                count += 1
+                res = demisto.executeCommand("syslog-send", {"message": cef, "using": "PANW IoT Siem Instance"})
+                if isError(res[0]):
+                    # We only get an error is configured syslog server address cant be resolved
+                    err_msg = "Cant connect to SIEM server %s" % res[0].get('Contents')
+                    send_status_to_panw_iot_cloud("error", err_msg)
+                    return_error(err_msg)
+                else:
+                    count += 1
     except Exception as ex:
         demisto.results("Failed to parse device map %s" % str(ex))
 
     if size == PAGE_SIZE:
         offset += PAGE_SIZE
-        demisto.executeCommand("send-status-to-panw-iot-cloud", {
-            "status": "success",
-            "message": "Successfully sent %d Devices to SIEM" % count,
-            "integration-name": "SIEM",
-            "playbook-name": "panw_iot_siem_bulk_integration",
-            "type": "device",
-            "timestamp": int(round(time.time() * 1000)),
-            "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-        })
-        demisto.results("Successfully sent %d Devices to SIEM" % count)
+        msg = "Successfully sent %d Devices to SIEM" % count
+        send_status_to_panw_iot_cloud("success", msg)
+        demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
         time.sleep(3)
     else:
         break
 
-demisto.executeCommand("send-status-to-panw-iot-cloud", {
-    "status": "success",
-    "message": "Successfully sent total %d Devices to SIEM" % count,
-    "integration-name": "SIEM",
-    "playbook-name": "panw_iot_siem_bulk_integration",
-    "type": "device",
-    "timestamp": int(round(time.time() * 1000)),
-    "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-})
-demisto.results("Successfully sent total %d Devices to SIEM" % count)
+msg = "Successfully sent total %d Devices to ISE" % count
+send_status_to_panw_iot_cloud("success", msg)
+demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
+return_results(msg)

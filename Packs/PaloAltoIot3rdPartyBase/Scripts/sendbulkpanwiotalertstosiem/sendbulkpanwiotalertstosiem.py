@@ -1,11 +1,26 @@
 import demistomock as demisto  # noqa: F401
 from CommonServerPython import *  # noqa: F401
-
-
 count = 0
 res = []
 offset = 0
 PAGE_SIZE = 1000
+
+'''
+returns a status and message back to cloud
+'''
+
+
+def send_status_to_panw_iot_cloud(status=None, msg=None):
+    demisto.executeCommand("send-status-to-panw-iot-cloud", {
+        "status": status,
+        "message": msg,
+        "integration-name": "SIEM",
+        "playbook-name": "panw_iot_siem_bulk_integration",
+        "type": "alert",
+        "timestamp": int(round(time.time() * 1000)),
+        "using": "Palo Alto IoT Third-Party-Integration Base Instance"
+    })
+
 
 while True:
     resp = demisto.executeCommand("get-asset-inventory-with-paging-and-offset", {
@@ -15,17 +30,10 @@ while True:
         "using": "Palo Alto IoT Third-Party-Integration Base Instance"
     })
     if isError(resp[0]):
-        demisto.executeCommand("send-status-to-panw-iot-cloud", {
-            "status": "error",
-            "message": "Error, could not get Alerts from Iot Cloud",
-            "integration-name": "SIEM",
-            "playbook-name": "panw_iot_siem_bulk_integration",
-            "type": "alert",
-            "timestamp": int(round(time.time() * 1000)),
-            "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-        })
-        return_error("Error, could not get Alerts from Iot Cloud")
-        return_error(resp[0])
+        err_msg = "Error, could not get alerts from Iot Cloud %s" % resp[0].get('Contents')
+        send_status_to_panw_iot_cloud("error", err_msg)
+        demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % err_msg)
+        return_error(err_msg)
         break
     size = 0
     try:
@@ -69,35 +77,28 @@ while True:
                 cef += "cs1Label=Description cs1=%s " % description
                 cef += "cs2Label=Values cs2=%s " % str(values)
 
-                demisto.executeCommand("syslog-send", {"message": cef, "using": "PANW IoT Siem Instance"})
-                count += 1
+                res = demisto.executeCommand("syslog-send", {"message": cef, "using": "PANW IoT Siem Instance"})
+                if isError(res[0]):
+                    # We only get an error is configured syslog server address cant be resolved
+                    err_msg = "Cant connect to SIEM server %s" % res[0].get('Contents')
+                    send_status_to_panw_iot_cloud("error", err_msg)
+                    return_error(err_msg)
+                else:
+                    count += 1
 
     except Exception as ex:
         demisto.results("Failed to parse alert map %s" % str(ex))
 
     if size == PAGE_SIZE:
         offset += PAGE_SIZE
-        demisto.executeCommand("send-status-to-panw-iot-cloud", {
-            "status": "success",
-            "message": "Successfully sent %d Alerts to SIEM" % count,
-            "integration-name": "SIEM",
-            "playbook-name": "panw_iot_siem_bulk_integration",
-            "type": "alert",
-            "timestamp": int(round(time.time() * 1000)),
-            "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-        })
-        demisto.results("Successfully sent %d Alert to SIEM" % count)
-        time.sleep(3)
+        msg = "Successfully sent %d Alerts to SIEM" % count
+        send_status_to_panw_iot_cloud("success", msg)
+        demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
+        time.sleep(5)
     else:
         break
 
-demisto.executeCommand("send-status-to-panw-iot-cloud", {
-    "status": "success",
-    "message": "Successfully sent total %d Alerts to SIEM" % count,
-    "integration-name": "SIEM",
-    "playbook-name": "panw_iot_siem_bulk_integration",
-    "type": "alert",
-    "timestamp": int(round(time.time() * 1000)),
-    "using": "Palo Alto IoT Third-Party-Integration Base Instance"
-})
-demisto.results("Successfully sent total %d Alerts to SIEM" % count)
+msg = "Successfully sent total %d Alerts to ISE" % count
+send_status_to_panw_iot_cloud("success", msg)
+demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
+return_results(msg)
