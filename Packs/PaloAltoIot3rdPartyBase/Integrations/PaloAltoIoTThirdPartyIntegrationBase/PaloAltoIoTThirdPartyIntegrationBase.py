@@ -42,29 +42,29 @@ api_type_map = {
 }
 
 cisco_ise_field_map = {
-    "ip": "ZingboxIpAddress",
-    "ip address": "ZingboxIP",
-    "ip_address": "ZingboxIP",
-    "profile": "ZingboxProfile",
-    "category": "ZingboxCategory",
-    "risk_score": "ZingboxRiskScore",
-    "risk score": "ZingboxRiskScore",
-    "confidence": "ZingboxConfidence",
-    "confidence score": "ZingboxConfidence",
-    "confidence_score": "ZingboxConfidence",
-    "tag": "ZingboxTag",
-    "asset_tag": "ZingboxTag",
-    "Tags": "ZingboxTag",
-    "hostname": "ZingboxHostname",
-    "osCombined": "ZingboxOS",
-    "model": "ZingboxModel",
-    "vendor": "ZingboxVendor",
-    "Serial Number": "ZingboxSerial",
-    "Serial_Number": "ZingboxSerial",
-    "endpoint protection": "ZingboxEPP",
-    "endpoint_protection": "ZingboxEPP",
-    "AET": "ZingboxAET",
-    # "External Network": "ZingboxInternetAccess",
+    "ip": ["ZingboxIpAddress", "PanwIoTIpAddress"],
+    "ip address": ["ZingboxIP", "PanwIoTIP"],
+    "ip_address": ["ZingboxIP", "PanwIoTIP"],
+    "profile": ["ZingboxProfile", "PanwIoTProfile"],
+    "category": ["ZingboxCategory", "PanwIoTCategory"],
+    "risk_score": ["ZingboxRiskScore", "PanwIoTRiskScore"],
+    "risk score": ["ZingboxRiskScore", "PanwIoTRiskScore"],
+    "confidence": ["ZingboxConfidence", "PanwIoTConfidence"],
+    "confidence score": ["ZingboxConfidence", "PanwIoTConfidence"],
+    "confidence_score": ["ZingboxConfidence", "PanwIoTConfidence"],
+    "tag": ["ZingboxTag", "PanwIoTTag"],
+    "asset_tag": ["ZingboxTag", "PanwIoTTag"],
+    "Tags": ["ZingboxTag", "PanwIoTTag"],
+    "hostname": ["ZingboxHostname", "PanwIoTHostname"],
+    "osCombined": ["ZingboxOS", "PanwIoTOS"],
+    "model": ["ZingboxModel", "PanwIoTModel"],
+    "vendor": ["ZingboxVendor", "PanwIoTVendor"],
+    "Serial Number": ["ZingboxSerial", "PanwIoTSerial"],
+    "Serial_Number": ["ZingboxSerial", "PanwIoTSerial"],
+    "endpoint protection": ["ZingboxEPP", "PanwIoTEPP"],
+    "endpoint_protection": ["ZingboxEPP", "PanwIoTEPP"],
+    "AET": ["ZingboxAET", "PanwIoTAET"],
+    "External Network": ["ZingboxInternetAccess", "PanwIoTInternetAccess"],
     # "last activity": "ZingboxLastActivity"
 }
 int_fields = ["risk_score", "risk score", "confidence", "confidence score", "confidence_score"]
@@ -115,7 +115,8 @@ device_fields_map = [
     ("AD_Username", "cs40Label=AD_Username cs40="),
     ("AD_Domain", "cs41Label=AD_Domain cs41="),
     ("Applications", "cs42Label=Applications cs42="),
-    ("Tags", "cs43Label=Tags cs43=")]
+    ("Tags", "cs43Label=Tags cs43="),
+    ("os_combined", "cs44Label=os_combined cs44=")]
 
 vulnerabilities_fields_map = [
     ("ip", "dvc="),
@@ -855,9 +856,11 @@ def convert_device_map_to_ise_attributes(args):
                             int_val = int(device_map[field])
                         except:
                             continue
-                        zb_attributes[cisco_ise_field_map[field]] = int_val
+                        zb_attributes[cisco_ise_field_map[field][0]] = int_val
+                        zb_attributes[cisco_ise_field_map[field][1]] = int_val
                     else:
-                        zb_attributes[cisco_ise_field_map[field]] = device_map[field]
+                        zb_attributes[cisco_ise_field_map[field][0]] = device_map[field]
+                        zb_attributes[cisco_ise_field_map[field][1]] = device_map[field]
             attribute_list['zb_attributes'] = zb_attributes
             opList.append(attribute_list)
 
