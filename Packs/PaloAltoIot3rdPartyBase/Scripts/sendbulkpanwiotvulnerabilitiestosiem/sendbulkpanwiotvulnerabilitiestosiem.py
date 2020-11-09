@@ -58,7 +58,7 @@ def send_status_to_panw_iot_cloud(status=None, msg=None):
     demisto.executeCommand("send-status-to-panw-iot-cloud", {
         "status": status,
         "message": msg,
-        "integration-name": "SIEM",
+        "integration-name": "siem",
         "playbook-name": "panw_iot_siem_bulk_integration",
         "type": "alert",
         "timestamp": int(round(time.time() * 1000)),
@@ -131,7 +131,7 @@ while True:
     else:
         break
 
-msg = "Successfully sent total %d Vulnerabilities to ISE" % count
+msg = "Successfully sent total %d Vulnerabilities to SIEM" % count
 send_status_to_panw_iot_cloud("success", msg)
 demisto.info("PANW_IOT_3RD_PARTY_BASE %s" % msg)
 return_results(msg)

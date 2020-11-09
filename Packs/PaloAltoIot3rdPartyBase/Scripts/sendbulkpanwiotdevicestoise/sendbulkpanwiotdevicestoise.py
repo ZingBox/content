@@ -76,7 +76,7 @@ def send_status_to_panw_iot_cloud(status=None, msg=None):
     demisto.executeCommand("send-status-to-panw-iot-cloud", {
         "status": status,
         "message": msg,
-        "integration-name": "ISE",
+        "integration-name": "ise",
         "playbook-name": "panw_iot_ise_bulk_integration",
         "type": "device",
         "timestamp": int(round(time.time() * 1000)),
