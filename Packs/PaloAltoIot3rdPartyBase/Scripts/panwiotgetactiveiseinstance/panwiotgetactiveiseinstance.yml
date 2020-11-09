@@ -2,7 +2,7 @@ comment: This Scripts pulls all ISE deployment node details and check if there i
   any node thats either a standalone OR a primary node and the node matches the instance
   configured by the user.
 commonfields:
-  id: f25e9856-47b3-49c6-8d5b-abf33811e17f
+  id: panw_iot_get_active_ise_instance
   version: -1
 dockerimage: demisto/python3:3.8.6.12176
 enabled: true
@@ -12,7 +12,6 @@ outputs:
   description: Returns instance name of the active Cisco ISE node.
 - contextPath: PaloAltoIoTIntegrationBase.NodeErrorStatus
   description: Returns the nodes error status if no active Cisco ISE nodes are found.
-pswd: ""
 runas: DBotWeakRole
 runonce: false
 script: ''
