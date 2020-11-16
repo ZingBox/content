@@ -502,7 +502,7 @@ def convert_asset_to_external_format():
             elif output_format == "SIEM":
                 data = convert_device_list_to_cef(asset_list)
             elif output_format == "ServiceNow":
-                # Shuai to do this
+                # Shuai to do this test
                 LOG("adding a line here")
             else:
                 return_error("Output format %s not supported for Devices" % output_format)
