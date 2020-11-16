@@ -1,0 +1,25 @@
+args:
+- description: Active Cisco ISE Instance.
+  name: active_ise_instance
+  required: true
+comment: This script gets all available devices from the IoT cloud and updates/creates
+  new endpoint with custom attributes on Cisco ISE.
+commonfields:
+  id: SendAllPANWIoTDevicesToCiscoISE
+  version: -1
+dockerimage: demisto/python3:3.8.6.13358
+enabled: true
+name: SendAllPANWIoTDevicesToCiscoISE
+runas: DBotWeakRole
+runonce: false
+script: ''
+scripttarget: 0
+subtype: python3
+tags:
+- PANW IoT 3rd Party Integration
+- Cisco ISE
+timeout: 362.88ms
+type: python
+fromversion: 5.0.0
+tests:
+- No tests (auto formatted)
