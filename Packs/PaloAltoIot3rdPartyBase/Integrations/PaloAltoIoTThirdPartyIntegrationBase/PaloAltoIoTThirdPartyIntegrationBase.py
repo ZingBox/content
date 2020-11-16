@@ -432,7 +432,7 @@ return example:
 
 
 def get_servicenow_devices_query_batch(args):
-    data = args.get('devices')
+    data = args.get('devices') # test shuai
     query_strs = []
     query_str = 'mac_addressIN'
     DEFAULT_VALUE_SIZE = 100
