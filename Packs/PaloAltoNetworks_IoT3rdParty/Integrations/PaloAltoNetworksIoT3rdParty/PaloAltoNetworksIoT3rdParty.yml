@@ -138,6 +138,13 @@ script:
     - description: List of input assets.
       isArray: true
       name: assetList
+    - description: ServiceNow ID and deviceid mapping
+      isArray: true
+      name: metadata
+    - description: single asset
+      name: asset
+    - description: 'incident triggered by PANW IoT cloud API or list of '
+      name: incident
     description: For a given asset (alert, device, vuln) converts it to 3rd party
       format.
     name: panw-iot-3rd-party-convert-assets-to-external-format
@@ -150,6 +157,12 @@ script:
       description: List CEF formatted device syslogs for SIEM.
     - contextPath: PanwIot3rdParty.CiscoISEAttributes
       description: List Cisco ISE attribute dicts/maps
+    - contextPath: PanwIot3rdParty.AlertSN
+      description: Single SN formatted alert string
+    - contextPath: PanwIot3rdParty.VulnerabilitySN
+      description: Single SN formatted vulnerability string
+    - contextPath: PanwIot3rdParty.DeviceSN
+      description: List of upsert ready formatted device for SN
   dockerimage: demisto/python3:3.8.6.13358
   longRunning: true
   runonce: false
