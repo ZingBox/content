@@ -22,6 +22,7 @@ tasks:
       iscommand: false
       name: ""
       version: -1
+      description: ''
     taskid: bc6fbd01-f31a-4bf3-82ab-bb9caca3b113
     timertriggers: []
     type: start
@@ -81,7 +82,7 @@ tasks:
       assetType:
         simple: Device
       incrementTime:
-        simple: "5"
+        simple: "15"
       offset: {}
       pageLength: {}
     separatecontext: false
@@ -89,13 +90,13 @@ tasks:
     task:
       brand: Palo Alto Networks IoT 3rd Party
       description: Returns a list of assets for the specified asset type.
-      id: c19f4b28-12ce-454b-8088-c0d10da5221f
+      id: f93c82bb-fdc2-4dfe-8fc8-e0cd422a512d
       iscommand: true
       name: get incremental device list
       script: Palo Alto Networks IoT 3rd Party|||panw-iot-3rd-party-get-asset-list
       type: regular
       version: -1
-    taskid: c19f4b28-12ce-454b-8088-c0d10da5221f
+    taskid: f93c82bb-fdc2-4dfe-8fc8-e0cd422a512d
     timertriggers: []
     type: regular
     view: |-
