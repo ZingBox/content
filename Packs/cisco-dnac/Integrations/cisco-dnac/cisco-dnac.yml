@@ -47,7 +47,7 @@ script:
   - arguments:
     - default: false
       description: client MAC address
-      isArray: false
+      isArray: true
       name: client
       required: true
       secret: false
@@ -74,7 +74,7 @@ script:
     - contextPath: cisco-dnac-IoT.client_enrichment_detail
       description: client enrichment details
       type: String
-  dockerimage: demisto/python3:3.8.6.13358
+  dockerimage: demisto/python3:3.9.1.15759
   feed: false
   isfetch: false
   longRunning: false

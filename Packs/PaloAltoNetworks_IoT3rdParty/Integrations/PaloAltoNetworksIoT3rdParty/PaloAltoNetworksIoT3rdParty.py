@@ -707,6 +707,154 @@ def convert_asset_to_external_format():
     )
 
 
+def get_active_list():
+    """
+    Returns a list mac address of active devices
+    """
+    asset_type = 'Device'
+    page_length = int(demisto.args().get('pageLength'))
+    offset = int(demisto.args().get('offset'))
+    active_range = int(demisto.args().get('active_range'))
+    siteids = demisto.args().get('siteids')
+
+    if page_length is None:
+        page_length = DEFAULT_PAGE_SIZE
+    if offset is None:
+        offset = 0
+    if active_range is None:
+        active_range = 15
+
+    params = {
+        'active_only': 'true',
+        'mac_only': 'true',
+        'active_range': str(active_range),
+        'offset': str(offset),
+        'pagelength': str(page_length)
+    }
+
+    asset_list = []
+
+    url = BASE_URL + api_type_map[asset_type]['list_url']
+
+    # gather all the results, break if the return size is less than requested page size
+    while True:
+        response = http_request('GET', url, params)
+        asset_list.extend(response.get('devices'))
+        size = response.get('total')
+        if size < page_length:
+            break
+        else:
+            offset += page_length
+            params['offset'] = str(offset)
+
+    op_data = {
+        "asset type": asset_type,
+        "assets pulled": len(asset_list)
+    }
+    return CommandResults(
+        readable_output=tableToMarkdown("Asset import summary:", op_data, removeNull=True),
+        outputs_prefix=api_type_map[asset_type]['context_path'],
+        outputs=asset_list
+    )
+
+
+def report_devices():
+    """
+    Returns a number of devices sent to IoT Cloud
+    """
+    DeviceData = demisto.args().get('DeviceData')
+
+    page_length = int(demisto.args().get('pageLength'))
+    if page_length is None:
+        page_length = DEFAULT_PAGE_SIZE
+
+    url = BASE_URL + "pub/v4.0/device/bulkUpdate"
+    data = {}
+    total = len(DeviceData)
+    updated = 0
+    while total > 0:
+        if total > page_length:
+            offset = total - page_length
+        else:
+            offset = 0 
+        data['devicelist'] = DeviceData[offset:total]
+        response = http_request('PUT', url, None, json.dumps(data))
+        updated += response.get('updatedDeviceNum')
+        total = offset
+
+    return CommandResults(
+        readable_output=f'{updated} device data updated',
+    )
+
+
+def extract_mac_address():
+    """
+    Returns mac address list of PANW IoT device data
+    """
+    dc = demisto.args().get('Devices')
+
+    for dv in dc:
+        if "deviceid" in dv:
+            mac = dv['deviceid']
+            if is_mac_address(mac):
+                macs.append(mac)
+
+    return CommandResults(
+        readable_output=f'{len(macs)} MAC addresses extracted',
+        outputs_prefix="PanwIot3rdParty.DeviceMacAddress",
+        outputs=macs[:5]
+    )
+
+
+def extract_dnac_device_data():
+    """
+    Returns PANW IoT device data
+    """
+    client_data = demisto.args().get('DNAcClientData')
+
+    res = []
+    for dc in client_data:
+        if 'detail' not in dc or 'errorCode' in dc['detail']:
+            continue
+
+        data = {'deviceid': dc['detail']['hostMac'].lower(),
+                'ip': dc['detail']['hostIpV4'],
+                'vlan': str(dc['detail']['vlanId']),
+                'WireWireless': dc['detail']['hostType']}
+        if None is not dc['detail']['location']:
+            data['location'] = dc['detail']['location']
+        # data['vlan_name'] = dc['detail']['']
+        # data['policy_type'] = dc['detail']['']
+
+        if 'WIRED' == data['WireWireless']:
+            data['switch_name'] = dc['connectionInfo']['nwDeviceName']
+            data['switch_mac'] = dc['connectionInfo']['nwDeviceMac']
+            data['speed'] = dc['detail']['linkSpeed']
+            data['switch_if_name'] = dc['detail']['port']
+            for nd in dc['topology']['nodes']:
+                if nd['description'] == 'SWITCH':
+                    data['switch_ip'] = nd['ip']
+                    break
+        else:
+            data['ap_name'] = dc['connectionInfo']['nwDeviceName']
+            data['ap_mac'] = dc['connectionInfo']['nwDeviceMac']
+            data['ap_slot_id'] = dc['detail']['slotId']
+            data['SSID'] = dc['detail']['ssid']
+            data['protocol_name'] = dc['connectionInfo']['protocol']
+            for nd in dc['topology']['nodes']:
+                if nd['description'] == 'AP':
+                    data['ap_ip'] = nd['ip']
+                    break
+
+        res.append(data)
+
+    return CommandResults(
+        readable_output=f'{len(res)} of {len(client_data)} client detail extracted',
+        outputs_prefix="PanwIot3rdParty.DeviceData",
+        outputs=res
+    )
+
+
 def connection_test_command(return_bool: bool = False):
     """
     Try to get a single device from the Cloud to test connectivity.
@@ -746,6 +894,18 @@ def main() -> None:
             return_results(results)
         elif demisto.command() == 'panw-iot-3rd-party-convert-assets-to-external-format':
             results = convert_asset_to_external_format()
+            return_results(results)
+        elif demisto.command() == 'panw-iot-3rd-party-get-active-list':
+            results = get_active_list()
+            return_results(results)
+        elif demisto.command() == 'panw-iot-3rd-party-report-devices':
+            results = report_devices()
+            return_results(results)
+        elif demisto.command() == 'panw-iot-3rd-party-extract-mac-address':
+            results = extract_mac_address()
+            return_results(results)
+        elif demisto.command() == 'panw-iot-3rd-party-extract-dnac-device-data':
+            results = extract_dnac_device_data()
             return_results(results)
         # Log exceptions and return errors
     except Exception as e:

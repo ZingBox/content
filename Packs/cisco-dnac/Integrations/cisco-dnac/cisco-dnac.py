@@ -5,7 +5,6 @@ import json
 import urllib3
 import requests
 import traceback
-from typing import Any, Dict, Tuple, List, Optional, Union, cast
 from requests.auth import HTTPBasicAuth
 import time
 
@@ -14,6 +13,9 @@ urllib3.disable_warnings()
 
 
 ''' CONSTANTS '''
+
+INVALID_TOKEN_RESPONSE_CODE = 401
+RATE_LIMIT_RESPONSE_CODE = 429
 
 BASE_URL = demisto.params().get('url')
 USERNAME = demisto.params().get('credentials').get('identifier')
@@ -42,34 +44,51 @@ NETWORK_DEVICE = '/dna/intent/api/v1/network-device'
 
 dnac_token = None
 
-def http_request(method, url_suffix, params={}, auth=None, data=None, headers=DEFAULT_HEADERS)  -> Dict[str, Any]:
-    try:
-        url = BASE_URL + url_suffix
-        LOG(f'running {method} request with url={url}')
-
-        response = requests.request(
-            method,
-            url,
-            headers=headers,
-            auth=auth,
-            verify=USE_SSL,
-            params=params,
-            data=data
-        )
-    except requests.exceptions.SSLError:
-        err_msg = 'Could not connect to Cisco DNA Center: Could not verify certificate.'
-        LOG(f'Error: {err_msg}')
-        return_error(err_msg)
-    except requests.exceptions.ConnectionError:
-        err_msg = 'Connection Error. Verify that the Server URL and port are correct, and that the port is open.'
-        LOG(f'Error: {err_msg}')
-        return_error(err_msg)
+def http_request(method, url_suffix, params=None, auth=None, data=None, headers=None):
+    if headers is None:
+        headers = DEFAULT_HEADERS
+    if params is None:
+        params = {}
+    url = BASE_URL + url_suffix
+    LOG(f'running {method} request with url={url}')
+    while True:
+        try:
+            response = requests.request(
+                method,
+                url,
+                headers=headers,
+                auth=auth,
+                verify=USE_SSL,
+                params=params,
+                data=data
+            )
+        except requests.exceptions.SSLError:
+            err_msg = 'Could not connect to Cisco DNA Center: Could not verify certificate.'
+            return_error(err_msg)
+        except requests.exceptions.ConnectionError:
+            err_msg = 'Connection Error. Verify that the Server URL and port are correct, and that the port is open.'
+            return_error(err_msg)
+        except Exception as e:
+            demisto.error(traceback.format_exc())  # print the traceback
+            return_error(f'Error:\n{str(e)}')
+        else:
+            # handle rate limit
+            if response.status_code == RATE_LIMIT_RESPONSE_CODE:
+                retry_after = max(60, int(response.headers.get('Retry-After', 15)))
+                LOG(f'Rate Limit exceeded: retry after {retry_after}')
+                time.sleep(retry_after)
+                continue
+            elif response.status_code == INVALID_TOKEN_RESPONSE_CODE and AUTH_URL != url_suffix:
+                LOG(f'refreshing access token')
+                dnac_token = get_dnac_jwt_token()
+                headers['X-Auth-Token'] = dnac_token
+                continue
+            else:
+                break
 
     # handle request failure
     if response.status_code not in {200, 201, 202, 204}:
-        message = parse_error_response(response)
-        err_msg = f'Error in API call to Cisco DNA Center Integration [{response.status_code}] - {response.reason}, {message}'
-        LOG(f'Error: {err_msg}')
+        err_msg = f'Error in API call to Cisco DNA Center Integration [{response.status_code}] - {response.json()}'
         return_error(err_msg)
 
     try:
@@ -79,23 +98,15 @@ def http_request(method, url_suffix, params={}, auth=None, data=None, headers=DE
 
     return response
 
-def parse_error_response(response):
-    try:
-        res = response.json()
-        msg = res.get('ERSResponse').get('messages')
-        err = msg[0].get('title', '')
-    except Exception:
-        return response.text
-    return err
-
 # Get Authentication token
 def get_dnac_jwt_token():
     response = http_request('POST', AUTH_URL, auth=HTTPBasicAuth(USERNAME, PASSWORD))
     try:
         token = response['Token']
     except Exception:
-        return response
-    return token
+        return_error(f'error: {response}')
+    else:
+        return token
 
 # Get network health
 def get_network_device(headers):
@@ -127,14 +138,16 @@ def get_clients(headers):
 def get_client_detail(headers):
     mac_address = demisto.args().get('client')
     timestamp = int(time.time() * 1000)
-    params = {
-        'timestamp': timestamp,
-        'macAddress': mac_address
-    }
-    response = http_request('GET', CLIENT_DETAIL, headers=headers, params=params)
+    params = {'timestamp': timestamp}
+    res = []
+    for mac in mac_address:
+        params['macAddress'] = mac
+        response = http_request('GET', CLIENT_DETAIL, headers=headers, params=params)
+        res.append(response)
     return CommandResults(
+        readable_output=f'got {len(res)} client detail responses',
         outputs_prefix='cisco-dnac-IoT.client_detail',
-        outputs=response
+        outputs=res
     )
 
 # Get client enrichment detail
@@ -160,7 +173,8 @@ def test_module() -> str:
         token = get_dnac_jwt_token()
     except DemistoException as e:
         raise e
-    return 'ok'
+    else:
+        return 'ok'
 
 
 ''' MAIN FUNCTION '''
@@ -194,8 +208,7 @@ def main() -> None:
 
         if demisto.command() == 'test-module':
             # This is the call made when pressing the integration Test button.
-            result = test_module()
-            return_results(result)
+            return_results(test_module())
 
         elif demisto.command() == 'dnac-network-device':
             return_results(get_network_device(headers))
@@ -213,6 +226,9 @@ def main() -> None:
     except Exception as e:
         demisto.error(traceback.format_exc())  # print the traceback
         return_error(f'Failed to execute {demisto.command()} command.\nError:\n{str(e)}')
+
+    finally:
+        LOG.print_log()
 
 
 ''' ENTRY POINT '''
