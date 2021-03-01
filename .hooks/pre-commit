@@ -24,7 +24,7 @@ if [ -e "./venv/bin/activate" -a -z "${VIRTUAL_ENV}" ]; then
 fi
 
 # --staged flag runs only on files about to commit
-demisto-sdk validate -g --skip-pack-release-notes --staged
+demisto-sdk validate -g --skip-pack-release-notes --staged --prev-ver code_review_branch
 RES=$?
 
 demisto-sdk secrets --ignore-entropy
