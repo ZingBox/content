@@ -735,6 +735,162 @@ def convert_asset_to_external_format(args):
     )
 
 
+def get_active_list(args):
+    """
+    Returns a list mac address of active devices
+    """
+    asset_type = 'device'
+    page_length = int(args.get('pageLength'))
+    offset = int(args.get('offset'))
+    active_range = int(args.get('active_range'))
+    siteids = args.get('siteids')
+
+    if page_length is None:
+        page_length = DEFAULT_PAGE_SIZE
+    if offset is None:
+        offset = 0
+    if active_range is None:
+        active_range = 15
+
+    stime = datetime.now() - timedelta(minutes=int(active_range))
+
+    params = {
+        'active_only': 'true',
+        'mac_only': 'true',
+        'stime': str(stime.strftime("%Y-%m-%dT%H:%MZ")),
+        'offset': str(offset),
+        'pagelength': str(page_length)
+    }
+
+    if siteids is not None:
+        params['site_names'] = str(siteids)
+
+    asset_list = []
+
+    url = BASE_URL + API_TYPE_MAP[asset_type]['list_url']
+
+    # gather all the results, break if the return size is less than requested page size
+    while True:
+        response = http_request('GET', url, params)
+        asset_list.extend(response.get('devices'))
+        size = response.get('total')
+        if size < page_length:
+            break
+        else:
+            offset += page_length
+            params['offset'] = str(offset)
+
+    op_data = {
+        "asset type": asset_type,
+        "assets pulled": len(asset_list)
+    }
+    return CommandResults(
+        readable_output=tableToMarkdown("Asset import summary:", op_data, removeNull=True),
+        outputs_prefix=API_TYPE_MAP[asset_type]['context_path'],
+        outputs=asset_list
+    )
+
+
+def report_devices(args):
+    """
+    Returns a number of devices sent to IoT Cloud
+    """
+    DeviceData = args.get('DeviceData')
+
+    pagelength = args.get('pageLength')
+    if pagelength is None:
+        page_length = DEFAULT_PAGE_SIZE
+    else:
+        page_length = int(pagelength)
+
+    url = BASE_URL + "pub/v4.0/device/bulkUpdate"
+    data = {}
+    total = len(DeviceData)
+    updated = 0
+    while total > 0:
+        if total > page_length:
+            offset = total - page_length
+        else:
+            offset = 0
+        data['devicelist'] = DeviceData[offset:total]
+        response = http_request('PUT', url, None, json.dumps(data))
+        updated += response.get('updatedDeviceNum')
+        total = offset
+
+    return CommandResults(
+        readable_output=f'{updated} device data updated',
+    )
+
+
+def extract_mac_address(args):
+    """
+    Returns mac address list of PANW IoT device data
+    """
+    dc = args.get('Devices')
+
+    macs = []
+    for dv in dc:
+        if "deviceid" in dv:
+            mac = dv['deviceid']
+            if is_mac_address(mac):
+                macs.append(mac)
+
+    return CommandResults(
+        readable_output=f'{len(macs)} MAC addresses extracted',
+        outputs_prefix="PanwIot3rdParty.DeviceMacAddress",
+        outputs=macs
+    )
+
+
+def extract_dnac_device_data(args):
+    """
+    Returns PANW IoT device data
+    """
+    client_data = args.get('DNAcClientData')
+
+    res = []
+    for dc in client_data:
+        if 'detail' not in dc or 'errorCode' in dc['detail']:
+            continue
+
+        data = {'deviceid': dc['detail']['hostMac'].lower(),
+                'ip': dc['detail']['hostIpV4'],
+                'vlan': str(dc['detail']['vlanId']),
+                'WireWireless': dc['detail']['hostType']}
+        if None is not dc['detail']['location']:
+            data['location'] = dc['detail']['location']
+        # data['vlan_name'] = dc['detail']['']
+        # data['policy_type'] = dc['detail']['']
+
+        if 'WIRED' == data['WireWireless']:
+            data['switch_name'] = dc['connectionInfo']['nwDeviceName']
+            data['switch_mac'] = dc['connectionInfo']['nwDeviceMac']
+            data['speed'] = dc['detail']['linkSpeed']
+            data['switch_if_name'] = dc['detail']['port']
+            for nd in dc['topology']['nodes']:
+                if nd['description'] == 'SWITCH':
+                    data['switch_ip'] = nd['ip']
+                    break
+        else:
+            data['ap_name'] = dc['connectionInfo']['nwDeviceName']
+            data['ap_mac'] = dc['connectionInfo']['nwDeviceMac']
+            data['ap_slot_id'] = dc['detail']['slotId']
+            data['SSID'] = dc['detail']['ssid']
+            data['protocol_name'] = dc['connectionInfo']['protocol']
+            for nd in dc['topology']['nodes']:
+                if nd['description'] == 'AP':
+                    data['ap_ip'] = nd['ip']
+                    break
+
+        res.append(data)
+
+    return CommandResults(
+        readable_output=f'{len(res)} of {len(client_data)} client detail extracted',
+        outputs_prefix="PanwIot3rdParty.DeviceData",
+        outputs=res
+    )
+
+
 def connection_test_command() -> str:
     """
     Try to get a single device from the Cloud to test connectivity.
@@ -770,6 +926,18 @@ def main() -> None:
             return_results(results)
         elif command == 'panw-iot-3rd-party-convert-assets-to-external-format':
             results = convert_asset_to_external_format(args)
+            return_results(results)
+        elif command == 'panw-iot-3rd-party-get-active-list':
+            results = get_active_list(args)
+            return_results(results)
+        elif command == 'panw-iot-3rd-party-report-devices':
+            results = report_devices(args)
+            return_results(results)
+        elif command == 'panw-iot-3rd-party-extract-mac-address':
+            results = extract_mac_address(args)
+            return_results(results)
+        elif command == 'panw-iot-3rd-party-extract-dnac-device-data':
+            results = extract_dnac_device_data(args)
             return_results(results)
         # Log exceptions and return errors
     except Exception as e:
