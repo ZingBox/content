@@ -1,0 +1,88 @@
+category: Network Security
+commonfields:
+  id: cisco-dnac-IoT
+  version: -1
+configuration:
+- display: Cisco DNA Center Server URL (e.g. https://sandboxdnac.cisco.com)
+  name: url
+  required: true
+  type: 0
+- display: Cisco DNA Center username
+  name: credentials
+  required: true
+  type: 9
+- display: site names (Comma-separated list of site names)
+  name: sites
+  required: false
+  type: 0
+- display: Trust any certificate (not secure)
+  name: insecure
+  required: false
+  type: 8
+- display: Use system proxy settings
+  name: proxy
+  required: false
+  type: 8
+description: Cisco DNA Center Integration for Paloalto Networks IoT
+display: cisco-dnac-IoT
+name: cisco-dnac-IoT
+script:
+  commands:
+  - deprecated: false
+    description: Get DNAc Network Device
+    execution: false
+    name: dnac-network-device
+    outputs:
+    - contextPath: cisco-dnac-IoT.network_device
+      description: network device list
+      type: String
+  - deprecated: false
+    description: Get DNAc Clients
+    execution: false
+    name: dnac-clients
+    outputs:
+    - contextPath: cisco-dnac-IoT.clients
+      description: client list
+      type: String
+  - arguments:
+    - default: false
+      description: client MAC address
+      isArray: true
+      name: client
+      required: true
+      secret: false
+    deprecated: false
+    description: Get DNAc Client Details
+    execution: false
+    name: dnac-client-detail
+    outputs:
+    - contextPath: cisco-dnac-IoT.client_detail
+      description: client details
+      type: String
+  - arguments:
+    - default: false
+      description: client mac address
+      isArray: false
+      name: client
+      required: true
+      secret: false
+    deprecated: false
+    description: Get client enrichment details
+    execution: false
+    name: dnac-client-enrichment-detail
+    outputs:
+    - contextPath: cisco-dnac-IoT.client_enrichment_detail
+      description: client enrichment details
+      type: String
+  dockerimage: demisto/python3:3.9.1.15759
+  feed: false
+  isfetch: false
+  longRunning: false
+  longRunningPort: false
+  runonce: false
+  script: '-'
+  subtype: python3
+  type: python
+tests:
+- No tests
+fromversion: 5.0.0
