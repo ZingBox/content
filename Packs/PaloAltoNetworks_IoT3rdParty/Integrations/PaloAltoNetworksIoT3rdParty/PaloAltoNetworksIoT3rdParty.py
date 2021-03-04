@@ -854,7 +854,7 @@ def extract_dnac_device_data(args):
             continue
 
         data = {'deviceid': dc['detail']['hostMac'].lower(),
-                'ip': dc['detail']['hostIpV4'],
+                'config_source': 'dnac',
                 'vlan': str(dc['detail']['vlanId']),
                 'WireWireless': dc['detail']['hostType']}
         if None is not dc['detail']['location']:
