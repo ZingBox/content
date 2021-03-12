@@ -745,11 +745,11 @@ def get_active_list(args):
     active_range = int(args.get('active_range'))
     siteids = args.get('siteids')
 
-    if page_length is None:
+    if page_length == None:
         page_length = DEFAULT_PAGE_SIZE
-    if offset is None:
+    if offset == None:
         offset = 0
-    if active_range is None:
+    if active_range == None:
         active_range = 15
 
     stime = datetime.now() - timedelta(minutes=int(active_range))
@@ -762,7 +762,7 @@ def get_active_list(args):
         'pagelength': str(page_length)
     }
 
-    if siteids is not None:
+    if siteids != None:
         params['site_names'] = str(siteids)
 
     asset_list = []
@@ -798,7 +798,7 @@ def report_devices(args):
     DeviceData = args.get('DeviceData')
 
     pagelength = args.get('pageLength')
-    if pagelength is None:
+    if pagelength == None:
         page_length = DEFAULT_PAGE_SIZE
     else:
         page_length = int(pagelength)
@@ -856,9 +856,9 @@ def extract_dnac_device_data(args):
         data = {'deviceid': dc['detail']['hostMac'].lower(),
                 'config_source': 'dnac',
                 'WireWireless': dc['detail']['hostType']}
-        if 0 is not dc['detail']['vlanId']:
+        if 0 != dc['detail']['vlanId']:
             data['vlan'] = str(dc['detail']['vlanId'])
-        if None is not dc['detail']['location']:
+        if None != dc['detail']['location']:
             data['location'] = dc['detail']['location']
         # data['vlan_name'] = dc['detail']['']
         # data['policy_type'] = dc['detail']['']
