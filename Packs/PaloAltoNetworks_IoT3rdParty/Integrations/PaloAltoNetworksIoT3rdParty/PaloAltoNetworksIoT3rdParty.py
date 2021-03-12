@@ -156,7 +156,7 @@ VULNERABILITY_FIELDS_MAP = [
     ("Tags", "cs43Label=Tags cs43=")]
 
 
-def http_request(method, url, api_params={}, data=None):
+def http_request(method, url, api_params=None, data=None):
 
     params = {
         'customerid': CUSTOMER_ID,
@@ -855,8 +855,9 @@ def extract_dnac_device_data(args):
 
         data = {'deviceid': dc['detail']['hostMac'].lower(),
                 'config_source': 'dnac',
-                'vlan': str(dc['detail']['vlanId']),
                 'WireWireless': dc['detail']['hostType']}
+        if 0 is not dc['detail']['vlanId']:
+            data['vlan'] = str(dc['detail']['vlanId'])
         if None is not dc['detail']['location']:
             data['location'] = dc['detail']['location']
         # data['vlan_name'] = dc['detail']['']
